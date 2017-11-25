@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+# VisualStudioVersion = 15.0.26124.0
+# MinimumVisualStudioVersion = 15.0.26124.0
+Project("{AA2FD04E-F00C-4F4A-8E9E-AAE2564DB8CF}") = "Befunge", "Befunge.csproj", "{47DA47B9-8935-4DDE-8FBC-A32DEAE080B4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{47DA47B9-8935-4DDE-8FBC-A32DEAE080B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47DA47B9-8935-4DDE-8FBC-A32DEAE080B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47DA47B9-8935-4DDE-8FBC-A32DEAE080B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47DA47B9-8935-4DDE-8FBC-A32DEAE080B4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
