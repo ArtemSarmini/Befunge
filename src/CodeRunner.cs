@@ -1,0 +1,46 @@
+using System;
+using System.Dynamic;
+
+namespace Befunge.Code
+{
+    public class InstructionPointer
+    {
+        private InstructionPointerDirection _direction;
+
+        private int _x,
+                    _y,
+                    _z;
+
+        public InstructionPointerDirection InstructionPointerDirection
+        {
+            get => _direction;
+            set => _direction = value;
+        }
+
+        public int X
+        {
+            get => _x;
+            set => _x = value;
+        }
+
+        public int Y
+        {
+            get => _y;
+            set => _y = value;
+        }
+
+        public int Z
+        {
+            get => _z;
+            set => _z = value;
+        }
+    }
+
+    public enum InstructionPointerDirection
+    {
+        Up,
+        Down,
+        Left,
+        Right
+    }
+}
