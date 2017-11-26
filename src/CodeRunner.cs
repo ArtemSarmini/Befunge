@@ -2,46 +2,57 @@ using System;
 
 namespace Befunge.Code
 {
-    public class InstructionPointer
-    {
-        private InstructionPointerDirection _direction;
+	public class InstructionPointer
+	{
+		//     z     y
+		//     |   /
+		//     |  /
+		//     | /
+		// ____|/___ x
+		//     /
+		//    /|
+		//   / |
+		//  /  |
+		// /   |
 
-        private int _x,
-                    _y,
-                    _z;
+		private InstructionPointerDirection _direction;
 
-        public InstructionPointerDirection InstructionPointerDirection
-        {
-            get => _direction;
-            set => _direction = value;
-        }
+		private int _x, // left-right
+					_y, // forward-backward
+					_z; // up-down
 
-        public int X
-        {
-            get => _x;
-            set => _x = value;
-        }
+		public InstructionPointerDirection InstructionPointerDirection
+		{
+			get => _direction;
+			set => _direction = value;
+		}
 
-        public int Y
-        {
-            get => _y;
-            set => _y = value;
-        }
+		public int X
+		{
+			get => _x;
+			set => _x = value;
+		}
 
-        public int Z
-        {
-            get => _z;
-            set => _z = value;
-        }
-    }
+		public int Y
+		{
+			get => _y;
+			set => _y = value;
+		}
 
-    public enum InstructionPointerDirection
-    {
-        Left,
-        Right,
-        Up,
-        Down,
-        Forward,
-        Backward
-    }
+		public int Z
+		{
+			get => _z;
+			set => _z = value;
+		}
+	}
+
+	public enum InstructionPointerDirection
+	{
+		Left,
+		Right,
+		Up,
+		Down,
+		Forward,
+		Backward
+	}
 }
