@@ -18,8 +18,8 @@ namespace Befunge.Code
 		private InstructionPointerDirection _direction;
 
 		private int _x, // left-right
-					_y, // forward-backward
-					_z; // up-down
+		            _y, // forward-backward
+		            _z; // up-down
 
 		public InstructionPointerDirection InstructionPointerDirection
 		{
