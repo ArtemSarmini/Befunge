@@ -1,5 +1,4 @@
 using System;
-using System.Dynamic;
 
 namespace Befunge.Code
 {
@@ -38,9 +37,11 @@ namespace Befunge.Code
 
     public enum InstructionPointerDirection
     {
+        Left,
+        Right,
         Up,
         Down,
-        Left,
-        Right
+        Forward,
+        Backward
     }
 }
