@@ -1,7 +1,13 @@
 using System;
+using System.Collections.Generic;
 
-namespace Befunge.Code
+namespace Befunge.Interpreter
 {
+	public static class CodeRunner
+	{
+		private static Stack<long> _stack;
+	}
+
 	public class InstructionPointer
 	{
 		//     z     y

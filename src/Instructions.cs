@@ -41,7 +41,7 @@ namespace Befunge.Lang
 		Not             = 33,  // !
 
 		// push 0 to 9
-		D0 = 48,
+		D0              = 48,
 		D1,
 		D2,
 		D3,
@@ -53,7 +53,7 @@ namespace Befunge.Lang
 		D9,
 
 		// push 10 to 15
-		D10 = 97,
+		D10             = 97,
 		D11,
 		D12,
 		D13,
