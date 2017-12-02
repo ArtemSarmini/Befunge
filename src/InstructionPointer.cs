@@ -1,16 +1,8 @@
-using System;
-using System.Collections.Generic;
-
 namespace Befunge.Interpreter
 {
-	public static class CodeRunner
-	{
-		private static Stack<long> _stack;
-	}
-
 	public class InstructionPointer
 	{
-		//     z     y
+		//     y     z
 		//     |   /
 		//     |  /
 		//     | /

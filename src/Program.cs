@@ -4,9 +4,10 @@ using Befunge.Windows;
 
 namespace Befunge
 {
-	class Program
+	static class Program
 	{
-		static IWindow _currentWindow;
+		private static IWindow _currentWindow;
+		private static IWindow _codeWindow;
 
 		static void Main(string[] args)
 		{
