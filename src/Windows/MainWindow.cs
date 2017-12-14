@@ -6,7 +6,9 @@ namespace Befunge.Windows
 	{
 		public void Run()
 		{
-			
+			Console.Clear();
+			Program._currentWindow = new CodeWindow();
+			Program._currentWindow.Run();
 		}
 
 		public WindowType Type => WindowType.Main;

@@ -13,13 +13,21 @@ namespace Befunge.Interpreter
 		//  /  |
 		// /   |
 
+		public InstructionPointer()
+		{
+			_x = 0;
+			_y = 0;
+			_z = 0;
+			_direction = InstructionPointerDirection.Right;
+		}
+
 		private InstructionPointerDirection _direction;
 
 		private int _x, // left-right
 		            _y, // forward-backward
 		            _z; // up-down
 
-		public InstructionPointerDirection InstructionPointerDirection
+		public InstructionPointerDirection Direction
 		{
 			get => _direction;
 			set => _direction = value;

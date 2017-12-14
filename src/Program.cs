@@ -4,16 +4,24 @@ using Befunge.Windows;
 
 namespace Befunge
 {
-	static class Program
+	class Program
 	{
-		private static IWindow _currentWindow;
-		private static IWindow _codeWindow;
+		internal static IWindow _currentWindow;
+		internal static IWindow _codeWindow;
 
 		static void Main(string[] args)
 		{
-			
+			try
+			{
+				_currentWindow = new MainWindow();
+				_currentWindow.Run();
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e.ToString());
+			}
 
-			// Console.ReadLine();
+			Console.Clear();
 		}
 	}
 }
