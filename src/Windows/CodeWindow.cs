@@ -24,7 +24,7 @@ namespace Befunge.Windows
 			}
 			Console.Clear();
 			Console.SetCursorPosition(0, 0);
-			PrintField();
+			_field.Print();
 			Console.WriteLine("^ field");
 			Console.ReadLine();
 		}
@@ -37,6 +37,7 @@ namespace Befunge.Windows
 			{
 				case ConsoleKey.Escape:
 					return true;
+
 				case ConsoleKey.RightArrow:
 					if (k.Modifiers == ConsoleModifiers.Alt)
 						_ip.Direction = InstructionPointerDirection.Right;
@@ -117,39 +118,6 @@ namespace Befunge.Windows
 			return false;
 		}
 
-		private void PrintField()
-		{
-			for (int i = 0; i < 16; i++)
-			{
-				for (int j = 0; j < 16; j++)
-					Console.Write(Helpers.ToPrintable(_field[j, i]));
-				Console.WriteLine();
-			}
-		}
-
 		public WindowType Type => WindowType.Code;
-
-		static class Helpers
-		{
-			internal static bool IsInstruction(char c)
-			{
-				return c > 31 && c < 127;
-			}
-
-			internal static bool IsInstruction(long l)
-			{
-				return l > 31 && l < 127;
-			}
-
-			internal static char ToPrintable(char c)
-			{
-			return IsInstruction(c) ? c : (char)0xFFFD;
-			}
-
-			internal static char ToPrintable(long l)
-			{
-				return (char)(IsInstruction(l) ? l : 0xFFFDL);
-			}
-		}
 	}
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Befunge.Interpreter
@@ -24,6 +25,19 @@ namespace Befunge.Interpreter
 			get => _field[x][y];
 			set => _field[x][y] = value;
 		}
+
+        public void Print()
+        {
+            for (int i = 0; i < 16; i++)
+			{
+				for (int j = 0; j < 16; j++)
+				{
+					// output is row by row, so it's valid args order
+					Console.Write(Helpers.ToPrintable(_field[j][i]));
+				}
+				Console.WriteLine();
+			}
+        }
 	}
 
 	public class Node
