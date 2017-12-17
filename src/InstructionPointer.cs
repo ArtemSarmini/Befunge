@@ -13,6 +13,12 @@ namespace Befunge.Interpreter
 		//  /  |
 		// /   |
 
+		private InstructionPointerDirection _direction;
+
+		private int _x, // left-right
+		            _y, // forward-backward
+		            _z; // up-down
+
 		public InstructionPointer()
 		{
 			_x = 0;
@@ -20,12 +26,6 @@ namespace Befunge.Interpreter
 			_z = 0;
 			_direction = InstructionPointerDirection.Right;
 		}
-
-		private InstructionPointerDirection _direction;
-
-		private int _x, // left-right
-		            _y, // forward-backward
-		            _z; // up-down
 
 		public InstructionPointerDirection Direction
 		{
@@ -49,6 +49,14 @@ namespace Befunge.Interpreter
 		{
 			get => _z;
 			set => _z = value;
+		}
+
+		public void Reset()
+		{
+			_x = 0;
+			_y = 0;
+			_z = 0;
+			_direction = InstructionPointerDirection.Right;
 		}
 	}
 

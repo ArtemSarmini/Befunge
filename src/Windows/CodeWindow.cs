@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 using Befunge.Interpreter;
 
@@ -10,13 +9,13 @@ namespace Befunge.Windows
 	{
 		private InstructionPointer _ip;
 		private Stack<long> _stack;
-		private List<List<long>> _field;
+		private Field _field;
 
 		public void Run()
 		{
-			if (_ip == null) _ip = new InstructionPointer();
+			if (_ip    == null) _ip    = new InstructionPointer();
 			if (_stack == null) _stack = new Stack<long>();
-			if (_field == null) _field = Helpers.CreateEmptyField();
+			if (_field == null) _field = new Field();
 
 			while (true)
 			{
@@ -30,7 +29,7 @@ namespace Befunge.Windows
 			Console.ReadLine();
 		}
 
-		// returns true if Esc was pressed 
+		// returns true if Esc was pressed
 		private bool HandleKey()
 		{
 			var k = Console.ReadKey(true);
@@ -74,11 +73,27 @@ namespace Befunge.Windows
 						Console.SetCursorPosition(_ip.X, _ip.Y);
 					}
 					break;
+
+				// win have problems with arrow+alt,
+				// so here are alternative key bindings
+				case ConsoleKey.L when k.Modifiers == ConsoleModifiers.Alt:
+					_ip.Direction = InstructionPointerDirection.Right;
+					break;
+				case ConsoleKey.J when k.Modifiers == ConsoleModifiers.Alt:
+					_ip.Direction = InstructionPointerDirection.Left;
+					break;
+				case ConsoleKey.I when k.Modifiers == ConsoleModifiers.Alt:
+					_ip.Direction = InstructionPointerDirection.Up;
+					break;
+				case ConsoleKey.K when k.Modifiers == ConsoleModifiers.Alt:
+					_ip.Direction = InstructionPointerDirection.Down;
+					break;
+
 				// actual input
 				default:
 				{
 					char c = k.KeyChar;
-					_field[_ip.X][_ip.Y] = Convert.ToInt32(c);
+					_field[_ip.X, _ip.Y].ChangeTo(Convert.ToInt64(c));
 					Console.Write(Helpers.ToPrintable(c));
 					switch (_ip.Direction)
 					{
@@ -107,25 +122,15 @@ namespace Befunge.Windows
 			for (int i = 0; i < 16; i++)
 			{
 				for (int j = 0; j < 16; j++)
-					Console.Write(Helpers.ToPrintable(_field[i][j]));
+					Console.Write(Helpers.ToPrintable(_field[j, i]));
 				Console.WriteLine();
 			}
 		}
 
 		public WindowType Type => WindowType.Code;
+
 		static class Helpers
 		{
-
-			internal static List<List<long>> CreateEmptyField()
-			{
-				var row = new List<long>(
-					new long[] { 32, 32, 32, 32, 32, 32, 32, 32,
-									  32, 32, 32, 32, 32, 32, 32, 32 });
-				var field = new List<List<long>>();
-				for (int i = 0; i < 16; i++)
-					field.Add(row);
-				return field;
-			}
 			internal static bool IsInstruction(char c)
 			{
 				return c > 31 && c < 127;

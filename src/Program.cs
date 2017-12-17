@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 
 using Befunge.Windows;
 
@@ -19,6 +20,7 @@ namespace Befunge
 			catch (Exception e)
 			{
 				Console.WriteLine(e.ToString());
+				File.WriteAllText("C:\\My documents\\CS\\Befunge\\log.txt", e.ToString());
 			}
 
 			Console.Clear();
