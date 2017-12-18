@@ -1,8 +1,0 @@
-System.ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
-Parameter name: index
-   at System.ThrowHelper.ThrowArgumentOutOfRange_IndexException()
-   at System.Collections.Generic.List`1.set_Item(Int32 index, T value)
-   at Befunge.Interpreter.Field..ctor() in C:\My documents\CS\Befunge\src\Field.cs:line 14
-   at Befunge.Windows.CodeWindow.Run() in C:\My documents\CS\Befunge\src\Windows\CodeWindow.cs:line 18
-   at Befunge.Windows.MainWindow.Run() in C:\My documents\CS\Befunge\src\Windows\MainWindow.cs:line 11
-   at Befunge.Program.Main(String[] args) in C:\My documents\CS\Befunge\src\Program.cs:line 18
