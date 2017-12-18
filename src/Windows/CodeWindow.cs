@@ -96,21 +96,7 @@ namespace Befunge.Windows
 					char c = k.KeyChar;
 					_field[_ip.X, _ip.Y].ChangeTo(Convert.ToInt64(c));
 					Console.Write(Helpers.ToPrintable(c));
-					switch (_ip.Direction)
-					{
-						case InstructionPointerDirection.Right:
-							_ip.X++;
-							break;
-						case InstructionPointerDirection.Left:
-							_ip.X--;
-							break;
-						case InstructionPointerDirection.Up:
-							_ip.Y--;
-							break;
-						case InstructionPointerDirection.Down:
-							_ip.Y++;
-							break;
-					}
+					_ip.Move();
 					Console.SetCursorPosition(_ip.X, _ip.Y);
 					break;
 				}

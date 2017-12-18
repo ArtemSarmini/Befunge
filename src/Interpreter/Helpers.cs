@@ -1,3 +1,5 @@
+using System;
+
 namespace Befunge.Interpreter
 {
 	internal static class Helpers
@@ -13,5 +15,12 @@ namespace Befunge.Interpreter
 
 		internal static char ToPrintable(long l) =>
 			(char)(IsInstruction(l) ? l : 0xFFFDL);
+	}
+
+	internal static class ThrowHelper
+	{
+		internal static void ThrowInvalidEnumValueException(string variable, string enumName) =>
+			throw new InvalidOperationException(
+				$"{variable} doesn't represent any possible {enumName} value");
 	}
 }

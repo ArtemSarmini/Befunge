@@ -1,14 +1,15 @@
-using System;
+using System.Collections.Generic;
 
 namespace Befunge.Lang
 {
-	public enum Instructions
+	public enum Instruction
 	{
-		Undefined       = 0,
+		// do we need it?
+		// Undefined       = 0,
 
 		// absolute flow control
-		GoRight         = 62,  // <
-		GoLeft          = 60,  // >
+		GoRight         = 62,  // >
+		GoLeft          = 60,  // <
 		GoUp            = 94,  // ^
 		GoDown          = 118, // v
 		GoForward       = 104, // h
@@ -22,7 +23,7 @@ namespace Befunge.Lang
 		TurnRight       = 93,  // ]
 		TurnLeft        = 91,  // [
 		Reflect         = 114, // r
-		
+
 		// conditional flow control
 		HorIf           = 95,  // _
 		VertIf          = 124, // |
@@ -82,7 +83,7 @@ namespace Befunge.Lang
 
 		// stack stack manipulation
 		StackUnderStack = 117, // u
-		Begin           = 123, // {}
+		Begin           = 123, // {
 		End             = 125, // }
 
 
@@ -99,5 +100,90 @@ namespace Befunge.Lang
 		Quit            = 113, // q
 		Split           = 116, // t
 		GetSysInfo      = 121, // y
+	}
+
+	public static class InstructionConverter
+	{
+		public static readonly Dictionary<Instruction, char> ToChar =
+			new Dictionary<Instruction, char>( new KeyValuePair<Instruction, char>[] {
+				MakePair(Instruction.GoRight,         '>'),
+				MakePair(Instruction.GoLeft,          '<'),
+				MakePair(Instruction.GoUp,            '^'),
+				MakePair(Instruction.GoDown,          'v'),
+				MakePair(Instruction.GoForward,       'h'),
+				MakePair(Instruction.GoBackward,      'l'),
+				MakePair(Instruction.GoRand,          '?'),
+				MakePair(Instruction.JumpOver,        ';'),
+				MakePair(Instruction.AbsDelta,        'x'),
+				MakePair(Instruction.Trampoline,      '#'),
+				MakePair(Instruction.TurnRight,       ']'),
+				MakePair(Instruction.TurnLeft,        '['),
+				MakePair(Instruction.Reflect,         'r'),
+				MakePair(Instruction.HorIf,           '_'),
+				MakePair(Instruction.VertIf,          '|'),
+				MakePair(Instruction.SagIf,           'm'),
+				MakePair(Instruction.Cmp,             'w'),
+				MakePair(Instruction.Jump,            'j'),
+				MakePair(Instruction.Iter,            'k'),
+				MakePair(Instruction.Add,             '+'),
+				MakePair(Instruction.Sub,             '-'),
+				MakePair(Instruction.Mul,             '*'),
+				MakePair(Instruction.Div,             '/'),
+				MakePair(Instruction.Rem,             '%'),
+				MakePair(Instruction.GreaterThan,     '`'),
+				MakePair(Instruction.Not,             '!'),
+				MakePair(Instruction.D0,              '0'),
+				MakePair(Instruction.D1,              '1'),
+				MakePair(Instruction.D2,              '2'),
+				MakePair(Instruction.D3,              '3'),
+				MakePair(Instruction.D4,              '4'),
+				MakePair(Instruction.D5,              '5'),
+				MakePair(Instruction.D6,              '6'),
+				MakePair(Instruction.D7,              '7'),
+				MakePair(Instruction.D8,              '8'),
+				MakePair(Instruction.D9,              '9'),
+				MakePair(Instruction.D10,             'a'),
+				MakePair(Instruction.D11,             'b'),
+				MakePair(Instruction.D12,             'c'),
+				MakePair(Instruction.D13,             'd'),
+				MakePair(Instruction.D14,             'e'),
+				MakePair(Instruction.D15,             'f'),
+				MakePair(Instruction.InInt,           '&'),
+				MakePair(Instruction.InChar,          '~'),
+				MakePair(Instruction.InFile,          'i'),
+				MakePair(Instruction.OutInt,          '.'),
+				MakePair(Instruction.OutChar,         ','),
+				MakePair(Instruction.OutFile,         'o'),
+				MakePair(Instruction.Pop,             '$'),
+				MakePair(Instruction.Dup,             ':'),
+				MakePair(Instruction.Swap,            '\\'),
+				MakePair(Instruction.Clear,           'n'),
+				MakePair(Instruction.Get,             'g'),
+				MakePair(Instruction.Put,             'p'),
+				MakePair(Instruction.Fetch,           '\''),
+				MakePair(Instruction.Store,           's'),
+				MakePair(Instruction.StackUnderStack, 'u'),
+				MakePair(Instruction.Begin,           '{'),
+				MakePair(Instruction.End,             '}'),
+				MakePair(Instruction.LoadSem,         '('),
+				MakePair(Instruction.UnloadSem,       ')'),
+				MakePair(Instruction.Space,           ' '),
+				MakePair(Instruction.Stop,            '@'),
+				MakePair(Instruction.Stringmode,      '\"'),
+				MakePair(Instruction.Nop,             'z'),
+				MakePair(Instruction.Exec,            '='),
+				MakePair(Instruction.Quit,            'q'),
+				MakePair(Instruction.Split,           't'),
+				MakePair(Instruction.GetSysInfo,      'y') } );
+
+
+
+		private static KeyValuePair<Instruction, char> MakePair(
+			Instruction instr, char c) =>
+				new KeyValuePair<Instruction, char>(instr, c);
+
+		private static KeyValuePair<char, Instruction> MakePair(
+			char c, Instruction instr) =>
+				new KeyValuePair<char, Instruction>(c, instr);
 	}
 }

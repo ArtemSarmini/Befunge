@@ -1,3 +1,5 @@
+using System;
+
 namespace Befunge.Interpreter
 {
 	public class InstructionPointer
@@ -57,6 +59,51 @@ namespace Befunge.Interpreter
 			_y = 0;
 			_z = 0;
 			_direction = InstructionPointerDirection.Right;
+		}
+
+		public void Move()
+		{
+			switch (_direction)
+			{
+				case InstructionPointerDirection.Right:
+					_x++;
+					break;
+				case InstructionPointerDirection.Left:
+					_x--;
+					break;
+				case InstructionPointerDirection.Up:
+					_y--;
+					break;
+				case InstructionPointerDirection.Down:
+					_y++;
+					break;
+				default:
+					throw new NotImplementedException();
+			}
+		}
+
+		public void Move(int steps)
+		{
+			if (steps < 1)
+				throw new ArgumentOutOfRangeException(nameof(steps), "Argument must be positive");
+
+			switch (_direction)
+			{
+				case InstructionPointerDirection.Right:
+					_x += steps;
+					break;
+				case InstructionPointerDirection.Left:
+					_x -= steps;
+					break;
+				case InstructionPointerDirection.Up:
+					_y -= steps;
+					break;
+				case InstructionPointerDirection.Down:
+					_y += steps;
+					break;
+				default:
+					throw new NotImplementedException();
+			}
 		}
 	}
 
