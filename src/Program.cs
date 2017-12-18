@@ -20,7 +20,7 @@ namespace Befunge
 			catch (Exception e)
 			{
 				Console.WriteLine(e.ToString());
-				File.WriteAllText("C:\\My documents\\CS\\Befunge\\log.txt", e.ToString() + Environment.NewLine);
+				File.WriteAllText(@"C:\My documents\CS\Befunge\log.txt", e.ToString() + Environment.NewLine);
 			}
 
 			Console.Clear();

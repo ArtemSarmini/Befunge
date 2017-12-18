@@ -176,14 +176,11 @@ namespace Befunge.Lang
 				MakePair(Instruction.Split,           't'),
 				MakePair(Instruction.GetSysInfo,      'y') } );
 
-
+		public static readonly Dictionary<char, Instruction> ToInstruction =
+			System.Linq.Enumerable.ToDictionary(ToChar, p => p.Value, p => p.Key);
 
 		private static KeyValuePair<Instruction, char> MakePair(
 			Instruction instr, char c) =>
 				new KeyValuePair<Instruction, char>(instr, c);
-
-		private static KeyValuePair<char, Instruction> MakePair(
-			char c, Instruction instr) =>
-				new KeyValuePair<char, Instruction>(c, instr);
 	}
 }

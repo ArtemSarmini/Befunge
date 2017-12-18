@@ -94,7 +94,7 @@ namespace Befunge.Windows
 				default:
 				{
 					char c = k.KeyChar;
-					_field[_ip.X, _ip.Y].ChangeTo(Convert.ToInt64(c));
+					_field[_ip].ChangeTo(Convert.ToInt64(c));
 					Console.Write(Helpers.ToPrintable(c));
 					_ip.Move();
 					Console.SetCursorPosition(_ip.X, _ip.Y);

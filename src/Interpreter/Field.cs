@@ -26,6 +26,12 @@ namespace Befunge.Interpreter
 			set => _field[x][y] = value;
 		}
 
+		public Node this [InstructionPointer ip]
+		{
+			get => _field[ip.X][ip.Y];
+			set => _field[ip.X][ip.Y] = value;
+		}
+
         public void Print()
         {
             for (int i = 0; i < 16; i++)
@@ -72,6 +78,8 @@ namespace Befunge.Interpreter
 		}
 
         public static implicit operator long(Node node) => node.Value;
+
+		public static explicit operator char(Node node) => (char)node.Value;
 
         public void ChangeTo(long value) => _value = value;
 	}
