@@ -1,100 +1,80 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Befunge.Interpreter
 {
 	public class Field
 	{
-		List<List<Node>> _field;
+		private List<List<long>> _field;
+
+		private static readonly int _width = 64;
+		private static readonly int _heigth = 32;
 
 		public Field()
 		{
-			_field = new List<List<Node>>(16);
-			for (int i = 0; i < 16; i++)
+			_field = new List<List<long>>(_heigth);
+			for (int i = 0; i < _heigth; i++)
 			{
-				var line = new List<Node>(16);
-				for (int j = 0; j < 16; j++)
-					line.Add(new Node(32));
+				var line = new List<long>(_width);
+				for (int j = 0; j < _width; j++)
+					line.Add(32);
 				_field.Add(line);
 			}
 		}
 
-		public Node this [int x, int y]
+		public long this [int x, int y]
 		{
-			get => _field[x][y];
-			set => _field[x][y] = value;
+			get => _field[y][x];
+			set => _field[y][x] = value;
 		}
 
-		public Node this [InstructionPointer ip]
+		public long this [InstructionPointer ip]
 		{
-			get => _field[ip.X][ip.Y];
-			set => _field[ip.X][ip.Y] = value;
+			get => _field[ip.Y][ip.X];
+			set => _field[ip.Y][ip.X] = value;
 		}
 
         public void Print()
         {
-            for (int i = 0; i < 16; i++)
-			{
-				for (int j = 0; j < 16; j++)
-				{
-					// output is row by row, so it's valid args order
-					Console.Write(Helpers.ToPrintable(_field[j][i]));
-				}
-				Console.WriteLine();
-			}
+			Console.WriteLine(string.Join(
+				Environment.NewLine,
+				_field.Select(l => string.Join(
+					"",
+					l.Select(c => Helpers.ToPrintable(c))
+				))
+			));
         }
 
-		public void Print(InstructionPointer nodeToHighlight)
+		public void Print(InstructionPointer cellToHighlight)
         {
-            for (int i = 0; i < 16; i++)
+            for (int i = 0; i < _heigth; i++)
 			{
-				for (int j = 0; j < 16; j++)
+				if (cellToHighlight.Y != i)
 				{
-					if (nodeToHighlight.X == j && nodeToHighlight.Y == i)
-						Console.BackgroundColor = ConsoleColor.DarkGray;
-					Console.Write(Helpers.ToPrintable(_field[j][i]));
-					Console.BackgroundColor = ConsoleColor.Black;
+					Console.WriteLine(string.Join(
+						"", _field[i].Select(c => Helpers.ToPrintable(c))));
 				}
-				Console.WriteLine();
+				else
+				{
+					for (int j = 0; j < _width; j++)
+					{
+						if (cellToHighlight.X == j)
+						{
+							ConsoleColor bgc = Console.BackgroundColor,
+							             fgc = Console.ForegroundColor;
+							Console.BackgroundColor = ConsoleColor.White;
+							Console.ForegroundColor = ConsoleColor.Black;
+							Console.Write(Helpers.ToPrintable(_field[i][j]));
+							Console.BackgroundColor = bgc;
+							Console.ForegroundColor = fgc;
+						}
+						else
+							Console.Write(Helpers.ToPrintable(_field[i][j]));
+					}
+					Console.WriteLine();
+				}
 			}
         }
-	}
-
-	public class Node
-	{
-		int _x, _y, _z;
-		long _value;
-
-        public Node(long value) => _value = value;
-
-		public int X
-		{
-			get => _x;
-			set => _x = value;
-		}
-
-		public int Y
-		{
-			get => _y;
-			set => _y = value;
-		}
-
-		public int Z
-		{
-			get => _z;
-			set => _z = value;
-		}
-
-		public long Value
-		{
-			get => _value;
-		    set => _value = value;
-		}
-
-        public static implicit operator long(Node node) => node.Value;
-
-		public static explicit operator char(Node node) => (char)node.Value;
-
-        public void ChangeTo(long value) => _value = value;
 	}
 }

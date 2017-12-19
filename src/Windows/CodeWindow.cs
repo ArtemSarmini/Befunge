@@ -25,9 +25,7 @@ namespace Befunge.Windows
 			Console.Clear();
 			Console.SetCursorPosition(0, 0);
 			_field.Print();
-			Console.WriteLine("^ field");
 			Console.ReadLine();
-			Console.Clear();
 
 			var runner = new CodeRunner(_field);
 			runner.Run();
@@ -46,7 +44,7 @@ namespace Befunge.Windows
 				case ConsoleKey.Backspace:
 					_ip.MoveBack();
 					Console.SetCursorPosition(_ip.X, _ip.Y);
-					_field[_ip].ChangeTo(' ');
+					_field[_ip] = ' ';
 					Console.Write(' ');
 					Console.SetCursorPosition(_ip.X, _ip.Y);
 					break;
@@ -107,7 +105,7 @@ namespace Befunge.Windows
 				default:
 				{
 					char c = k.KeyChar;
-					_field[_ip].ChangeTo(Convert.ToInt64(c));
+					_field[_ip] = Convert.ToInt64(c);
 					Console.Write(Helpers.ToPrintable(c));
 					_ip.Move();
 					Console.SetCursorPosition(_ip.X, _ip.Y);

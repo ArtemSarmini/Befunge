@@ -43,36 +43,20 @@ namespace Befunge.Interpreter
 				_field.Print(_ip);
 				// optimization for instructions that push number on stack
 				// in this case we can call proper instruction without reflection
-				File.AppendAllText("logs/flow_log.txt", _ip.ToString() + Environment.NewLine);
 				char instruction = (char)_field[_ip];
 				if (   (instruction >= '0' && instruction <= '9')
 					|| (instruction >= 'a' && instruction <= 'f'))
 				{
-					try
-					{
-						DN(instruction, InstructionConverter.ToInstruction[instruction]);
-						System.Threading.Thread.Sleep(200);
-					}
-					catch (StopException)
-					{
-						break;
-					}
+					DN(instruction, InstructionConverter.ToInstruction[instruction]);
 				}
 				else
 				{
 					MethodInfo command = typeof(CodeRunner).GetMethod(
-						InstructionConverter.ToInstruction[(char)_field[_ip]].ToString(),
+						InstructionConverter.ToInstruction[instruction].ToString(),
 						BindingFlags.NonPublic | BindingFlags.Instance);
-					try
-					{
-						object result = command.Invoke(this, null);
-						System.Threading.Thread.Sleep(200);
-					}
-					catch (StopException)
-					{
-						break;
-					}
+					command.Invoke(this, null);
 				}
+				System.Threading.Thread.Sleep(200);
 			}
 		}
 

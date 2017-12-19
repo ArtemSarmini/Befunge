@@ -21,11 +21,16 @@ namespace Befunge
 			}
 			catch (Exception e)
 			{
-				Console.WriteLine(e.ToString());
-				File.WriteAllText("logs/err_log.txt", e.ToString() + Environment.NewLine);
+				Console.Clear();
+				Console.WriteLine(
+					  $"Something went wrong. Exception {e.GetType().Name} was cought."
+					+ Environment.NewLine
+					+ "See logs/err_log.txt for details.");
+				File.WriteAllText(
+					"logs/err_log.txt",
+					e.ToString() + Environment.NewLine);
 				Console.ReadLine();
 			}
-
 			Console.Clear();
 		}
 	}
