@@ -12,11 +12,10 @@ namespace Befunge.Interpreter
 			_field = new List<List<Node>>(16);
 			for (int i = 0; i < 16; i++)
 			{
-				_field.Add(new List<Node>()
-					{ new Node(32), new Node(32), new Node(32), new Node(32),
-					  new Node(32), new Node(32), new Node(32), new Node(32),
-                      new Node(32), new Node(32), new Node(32), new Node(32),
-                      new Node(32), new Node(32), new Node(32), new Node(32), });
+				var line = new List<Node>(16);
+				for (int j = 0; j < 16; j++)
+					line.Add(new Node(32));
+				_field.Add(line);
 			}
 		}
 
@@ -40,6 +39,21 @@ namespace Befunge.Interpreter
 				{
 					// output is row by row, so it's valid args order
 					Console.Write(Helpers.ToPrintable(_field[j][i]));
+				}
+				Console.WriteLine();
+			}
+        }
+
+		public void Print(InstructionPointer nodeToHighlight)
+        {
+            for (int i = 0; i < 16; i++)
+			{
+				for (int j = 0; j < 16; j++)
+				{
+					if (nodeToHighlight.X == j && nodeToHighlight.Y == i)
+						Console.BackgroundColor = ConsoleColor.DarkGray;
+					Console.Write(Helpers.ToPrintable(_field[j][i]));
+					Console.BackgroundColor = ConsoleColor.Black;
 				}
 				Console.WriteLine();
 			}

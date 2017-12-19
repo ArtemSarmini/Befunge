@@ -14,13 +14,16 @@ namespace Befunge
 		{
 			try
 			{
+				Directory.CreateDirectory("logs");
+
 				_currentWindow = new MainWindow();
 				_currentWindow.Run();
 			}
 			catch (Exception e)
 			{
 				Console.WriteLine(e.ToString());
-				File.WriteAllText(@"C:\My documents\CS\Befunge\misc\log.txt", e.ToString() + Environment.NewLine);
+				File.WriteAllText("logs/err_log.txt", e.ToString() + Environment.NewLine);
+				Console.ReadLine();
 			}
 
 			Console.Clear();

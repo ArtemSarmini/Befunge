@@ -82,6 +82,27 @@ namespace Befunge.Interpreter
 			}
 		}
 
+		public void MoveBack()
+		{
+			switch (_direction)
+			{
+				case InstructionPointerDirection.Right:
+					_x--;
+					break;
+				case InstructionPointerDirection.Left:
+					_x++;
+					break;
+				case InstructionPointerDirection.Up:
+					_y++;
+					break;
+				case InstructionPointerDirection.Down:
+					_y--;
+					break;
+				default:
+					throw new NotImplementedException();
+			}
+		}
+
 		public void Move(int steps)
 		{
 			if (steps < 1)
@@ -104,6 +125,13 @@ namespace Befunge.Interpreter
 				default:
 					throw new NotImplementedException();
 			}
+		}
+
+		public override string ToString()
+		{
+			return string.Format(
+				"{{IP: X({0}), Y({1}), Z({2}), Direction({3})}}",
+				_x, _y, _z, _direction);
 		}
 	}
 

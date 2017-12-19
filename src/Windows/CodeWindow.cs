@@ -27,6 +27,11 @@ namespace Befunge.Windows
 			_field.Print();
 			Console.WriteLine("^ field");
 			Console.ReadLine();
+			Console.Clear();
+
+			var runner = new CodeRunner(_field);
+			runner.Run();
+			Console.ReadLine();
 		}
 
 		// returns true if Esc was pressed
@@ -37,6 +42,14 @@ namespace Befunge.Windows
 			{
 				case ConsoleKey.Escape:
 					return true;
+
+				case ConsoleKey.Backspace:
+					_ip.MoveBack();
+					Console.SetCursorPosition(_ip.X, _ip.Y);
+					_field[_ip].ChangeTo(' ');
+					Console.Write(' ');
+					Console.SetCursorPosition(_ip.X, _ip.Y);
+					break;
 
 				case ConsoleKey.RightArrow:
 					if (k.Modifiers == ConsoleModifiers.Alt)

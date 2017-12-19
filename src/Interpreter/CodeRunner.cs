@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 
 using Befunge.Lang;
@@ -20,24 +21,58 @@ namespace Befunge.Interpreter
 		private Stack<long> _stack;
 		private Random _rnd;
 
-		public CodeRunner()
+		private bool _run;
+
+		public CodeRunner(Field field)
 		{
-			_field = new Field();
+			_field = field;
 			_ip    = new InstructionPointer();
 			_mode  = InterpreterMode.Normal;
 			_stack = new Stack<long>();
 
 			_rnd = new Random();
+
+			_run = true;
 		}
 
 		public void Run()
 		{
-			while (true)
+			while (_run)
 			{
-				var command = typeof(CodeRunner).GetMethod(
-					InstructionConverter.ToInstruction[(char)_field[_ip]].ToString(),
-					BindingFlags.NonPublic);
-				command.Invoke(this, null);
+				Console.Clear();
+				_field.Print(_ip);
+				// optimization for instructions that push number on stack
+				// in this case we can call proper instruction without reflection
+				File.AppendAllText("logs/flow_log.txt", _ip.ToString() + Environment.NewLine);
+				char instruction = (char)_field[_ip];
+				if (   (instruction >= '0' && instruction <= '9')
+					|| (instruction >= 'a' && instruction <= 'f'))
+				{
+					try
+					{
+						DN(instruction, InstructionConverter.ToInstruction[instruction]);
+						System.Threading.Thread.Sleep(200);
+					}
+					catch (StopException)
+					{
+						break;
+					}
+				}
+				else
+				{
+					MethodInfo command = typeof(CodeRunner).GetMethod(
+						InstructionConverter.ToInstruction[(char)_field[_ip]].ToString(),
+						BindingFlags.NonPublic | BindingFlags.Instance);
+					try
+					{
+						object result = command.Invoke(this, null);
+						System.Threading.Thread.Sleep(200);
+					}
+					catch (StopException)
+					{
+						break;
+					}
+				}
 			}
 		}
 
@@ -103,7 +138,7 @@ namespace Befunge.Interpreter
 			switch (_mode)
 			{
 				case InterpreterMode.Normal:
-					_ip.Direction = InstructionPointerDirection.Up;
+					_ip.Direction = InstructionPointerDirection.Down;
 					break;
 				case InterpreterMode.String:
 					_stack.Push(InstructionConverter.ToChar[Instruction.GoDown]);
@@ -544,6 +579,8 @@ namespace Befunge.Interpreter
 			_ip.Move();
 		}
 
+		// D0 to D15 were replaced with DN
+		/*
 		private void D0()
 		{
 			switch (_mode)
@@ -847,6 +884,26 @@ namespace Befunge.Interpreter
 			}
 			_ip.Move();
 		}
+		*/
+
+		private void DN(char n, Instruction instruction)
+		{
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					_stack.Push(n);
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.D15]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
+		}
 
 		private void InInt()
 		{
@@ -945,22 +1002,78 @@ namespace Befunge.Interpreter
 
 		private void Space()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					// nop
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.Space]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void Stop()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					_run = false;
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.Stop]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void Stringmode()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					_mode = InterpreterMode.String;
+					break;
+				case InterpreterMode.String:
+					_mode = InterpreterMode.Normal;
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void Nop()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					// nop
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.Nop]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void Exec()
