@@ -19,8 +19,8 @@ namespace Befunge.Interpreter
 
 	internal static class ThrowHelper
 	{
-		internal static void ThrowInvalidEnumValueException(string variable, string enumName) =>
-			throw new InvalidOperationException(
+		internal static void ThrowInvalidEnumValueException(string variable, string enumName)
+			=> throw new InvalidOperationException(
 				$"{variable} doesn't represent any possible {enumName} value");
 	}
 }
