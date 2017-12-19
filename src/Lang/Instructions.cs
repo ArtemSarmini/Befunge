@@ -179,8 +179,9 @@ namespace Befunge.Lang
 		public static readonly Dictionary<char, Instruction> ToInstruction =
 			System.Linq.Enumerable.ToDictionary(ToChar, p => p.Value, p => p.Key);
 
+		// to avoid explicit generic type indication in the code above
 		private static KeyValuePair<Instruction, char> MakePair(
-			Instruction instr, char c)
-				=> new KeyValuePair<Instruction, char>(instr, c);
+			Instruction instruction, char c)
+				=> new KeyValuePair<Instruction, char>(instruction, c);
 	}
 }
