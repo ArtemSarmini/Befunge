@@ -180,7 +180,7 @@ namespace Befunge.Lang
 			System.Linq.Enumerable.ToDictionary(ToChar, p => p.Value, p => p.Key);
 
 		private static KeyValuePair<Instruction, char> MakePair(
-			Instruction instr, char c) =>
-				new KeyValuePair<Instruction, char>(instr, c);
+			Instruction instr, char c)
+				=> new KeyValuePair<Instruction, char>(instr, c);
 	}
 }
