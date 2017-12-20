@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+
+using Befunge.Lang;
 
 namespace Befunge.Interpreter
 {
@@ -15,6 +18,11 @@ namespace Befunge.Interpreter
 
 		internal static char ToPrintable(long l) =>
 			(char)(IsInstruction(l) ? l : 0xFFFDL);
+
+		internal static long SafePop(this Stack<long> stack)
+		{
+			return stack.Count != 0 ? stack.Pop() : 0;
+		}
 	}
 
 	internal static class ThrowHelper
@@ -22,5 +30,9 @@ namespace Befunge.Interpreter
 		internal static void ThrowInvalidEnumValueException(string variable, string enumName)
 			=> throw new InvalidOperationException(
 				$"{variable} doesn't represent any possible {enumName} value");
+
+		internal static void ThrowNotImplementedInstructionException(Instruction instruction)
+			=> throw new NotImplementedException(
+				$"Instruction '{InstructionConverter.ToChar[instruction]}' ({instruction}) is not implemented.");
 	}
 }

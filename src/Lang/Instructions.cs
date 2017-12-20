@@ -91,7 +91,7 @@ namespace Befunge.Lang
 		LoadSem         = 40,  // (
 		UnloadSem       = 41,  // )
 
-		// misc instructions
+		// misc Instructions
 		Space           = 32,
 		Stop            = 64,  // @
 		Stringmode      = 34,  // "
@@ -181,7 +181,7 @@ namespace Befunge.Lang
 
 		// to avoid explicit generic type indication in the code above
 		private static KeyValuePair<Instruction, char> MakePair(
-			Instruction instruction, char c)
-				=> new KeyValuePair<Instruction, char>(instruction, c);
+			Instruction Instruction, char c)
+				=> new KeyValuePair<Instruction, char>(Instruction, c);
 	}
 }

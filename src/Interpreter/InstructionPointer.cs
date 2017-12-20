@@ -82,6 +82,31 @@ namespace Befunge.Interpreter
 			}
 		}
 
+		public void MoveSafe()
+		{
+			switch (_direction)
+			{
+				case InstructionPointerDirection.Right:
+					if (_x < Field.Width)
+						_x++;
+					break;
+				case InstructionPointerDirection.Left:
+					if (_x > 0)
+						_x--;
+					break;
+				case InstructionPointerDirection.Up:
+					if (_y > 0)
+						_y--;
+					break;
+				case InstructionPointerDirection.Down:
+					if (_y < Field.Heigth)
+						_y++;
+					break;
+				default:
+					throw new NotImplementedException();
+			}
+		}
+
 		public void MoveBack()
 		{
 			switch (_direction)
@@ -130,8 +155,7 @@ namespace Befunge.Interpreter
 		public override string ToString()
 		{
 			return string.Format(
-				"{{IP: X({0}), Y({1}), Z({2}), Direction({3})}}",
-				_x, _y, _z, _direction);
+				$"{{IP: X({_x}), Y({_y}), Z({_z}), Direction({_direction})}}");
 		}
 	}
 

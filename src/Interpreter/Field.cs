@@ -9,7 +9,7 @@ namespace Befunge.Interpreter
 		private List<List<long>> _field;
 
 		private static readonly int _width = 64;
-		private static readonly int _heigth = 32;
+		private static readonly int _heigth = 8;
 
 		public Field()
 		{
@@ -34,6 +34,9 @@ namespace Befunge.Interpreter
 			get => _field[ip.Y][ip.X];
 			set => _field[ip.Y][ip.X] = value;
 		}
+
+		public static int Width  => _width;
+		public static int Heigth => _heigth;
 
         public void Print()
         {

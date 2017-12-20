@@ -8,13 +8,11 @@ namespace Befunge.Windows
 	public class CodeWindow : IWindow
 	{
 		private InstructionPointer _ip;
-		private Stack<long> _stack;
 		private Field _field;
 
 		public void Run()
 		{
 			if (_ip    == null) _ip    = new InstructionPointer();
-			if (_stack == null) _stack = new Stack<long>();
 			if (_field == null) _field = new Field();
 
 			while (true)
@@ -29,7 +27,7 @@ namespace Befunge.Windows
 
 			var runner = new CodeRunner(_field);
 			runner.Run();
-			Console.ReadLine();
+			Console.WriteLine(Environment.NewLine + "Done!");
 		}
 
 		// returns true if Esc was pressed
@@ -52,7 +50,7 @@ namespace Befunge.Windows
 				case ConsoleKey.RightArrow:
 					if (k.Modifiers == ConsoleModifiers.Alt)
 						_ip.Direction = InstructionPointerDirection.Right;
-					else
+					else if (_ip.X < Field.Width)
 					{
 						_ip.X++;
 						Console.SetCursorPosition(_ip.X, _ip.Y);
@@ -61,7 +59,7 @@ namespace Befunge.Windows
 				case ConsoleKey.LeftArrow:
 					if (k.Modifiers == ConsoleModifiers.Alt)
 						_ip.Direction = InstructionPointerDirection.Left;
-					else
+					else if (_ip.X > 0)
 					{
 						_ip.X--;
 						Console.SetCursorPosition(_ip.X, _ip.Y);
@@ -70,7 +68,7 @@ namespace Befunge.Windows
 				case ConsoleKey.UpArrow:
 					if (k.Modifiers == ConsoleModifiers.Alt)
 						_ip.Direction = InstructionPointerDirection.Up;
-					else
+					else if (_ip.Y > 0)
 					{
 						_ip.Y--;
 						Console.SetCursorPosition(_ip.X, _ip.Y);
@@ -79,7 +77,7 @@ namespace Befunge.Windows
 				case ConsoleKey.DownArrow:
 					if (k.Modifiers == ConsoleModifiers.Alt)
 						_ip.Direction = InstructionPointerDirection.Down;
-					else
+					else if (_ip.Y < Field.Heigth)
 					{
 						_ip.Y++;
 						Console.SetCursorPosition(_ip.X, _ip.Y);
@@ -107,7 +105,7 @@ namespace Befunge.Windows
 					char c = k.KeyChar;
 					_field[_ip] = Convert.ToInt64(c);
 					Console.Write(Helpers.ToPrintable(c));
-					_ip.Move();
+					_ip.MoveSafe();
 					Console.SetCursorPosition(_ip.X, _ip.Y);
 					break;
 				}

@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
-
+using System.Threading;
 using Befunge.Lang;
 
 namespace Befunge.Interpreter
@@ -19,9 +20,11 @@ namespace Befunge.Interpreter
 		private InstructionPointer _ip;
 		private InterpreterMode _mode;
 		private Stack<long> _stack;
-		private Random _rnd;
 
+		private Random _rnd;
 		private bool _run;
+		private string _separatorLine;
+		private string _input, _output;
 
 		public CodeRunner(Field field)
 		{
@@ -30,34 +33,93 @@ namespace Befunge.Interpreter
 			_mode  = InterpreterMode.Normal;
 			_stack = new Stack<long>();
 
-			_rnd = new Random();
-
-			_run = true;
+			_rnd           = new Random();
+			_run           = true;
+			//                                 '═'
+			_separatorLine = new string((char)0x2550, Field.Width);
+			_input         = "";
+			_output        = "";
 		}
 
 		public void Run()
 		{
+			Console.CursorVisible = false;
 			while (_run)
 			{
 				Console.Clear();
-				_field.Print(_ip);
-				// optimization for instructions that push number on stack
-				// in this case we can call proper instruction without reflection
+				Print();
+
 				char instruction = (char)_field[_ip];
-				if (   (instruction >= '0' && instruction <= '9')
-					|| (instruction >= 'a' && instruction <= 'f'))
+
+				if (!Helpers.IsInstruction(_field[_ip]))
 				{
-					DN(instruction, InstructionConverter.ToInstruction[instruction]);
+					Reflect();
+				}
+				// A to Z are reserved and aren't currently supported
+				// they can be pushed on stack in stringmode though
+				else if (instruction >= 'A' && instruction <= 'Z')
+				{
+					Reserved(instruction);
+				}
+				// optimization for instructions 1 to 9 and a to f
+				// in this case proper instruction can be called without reflection
+				else if (instruction >= '0' && instruction <= '9')
+				{
+					DN(instruction - '0', InstructionConverter.ToInstruction[instruction]);
+				}
+				else if (instruction >= 'a' && instruction <= 'f')
+				{
+					DN(instruction - 'a', InstructionConverter.ToInstruction[instruction]);
 				}
 				else
 				{
 					MethodInfo command = typeof(CodeRunner).GetMethod(
 						InstructionConverter.ToInstruction[instruction].ToString(),
 						BindingFlags.NonPublic | BindingFlags.Instance);
-					command.Invoke(this, null);
+					try
+					{
+						command.Invoke(this, null);
+					}
+					catch (TargetInvocationException e)
+					{
+						if (e.InnerException is NotImplementedException)
+							throw e.InnerException;
+						else
+							throw;
+					}
 				}
-				System.Threading.Thread.Sleep(200);
+				switch (Program.Speed)
+				{
+					case Speed.Fast:
+						Thread.Sleep(250);
+						break;
+					case Speed.Slow:
+						Thread.Sleep(3000);
+						break;
+					case Speed.OnKeypress:
+						var _ = Console.ReadKey(true);
+						break;
+					default:
+						ThrowHelper.ThrowInvalidEnumValueException(nameof(Program.Speed), nameof(Speed));
+						break;
+				}
 			}
+			Console.CursorVisible = true;
+		}
+
+		private void Print()
+		{
+			_field.Print(_ip);
+			Console.WriteLine(_separatorLine);
+			Console.WriteLine($"IP: x = {_ip.X}, y = {_ip.Y}, direction = {_ip.Direction}");
+			Console.WriteLine(_separatorLine);
+			Console.WriteLine("Mode: " + _mode);
+			Console.WriteLine(_separatorLine);
+			Console.WriteLine("Stack: " + string.Join(' ', _stack.Reverse()));
+			Console.WriteLine(_separatorLine);
+			Console.WriteLine("Input: " + string.Join("", _input));
+			Console.WriteLine(_separatorLine);
+			Console.WriteLine("Output: " + string.Join("", _output));
 		}
 
 		private void GoRight()
@@ -195,12 +257,40 @@ namespace Befunge.Interpreter
 
 		private void JumpOver()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					ThrowHelper.ThrowNotImplementedInstructionException(Instruction.JumpOver);
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.JumpOver]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void AbsDelta()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					ThrowHelper.ThrowNotImplementedInstructionException(Instruction.AbsDelta);
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.AbsDelta]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void Trampoline()
@@ -220,6 +310,7 @@ namespace Befunge.Interpreter
 						nameof(InstructionPointerDirection));
 					break;
 			}
+			// no move here
 		}
 
 		private void TurnLeft()
@@ -349,7 +440,7 @@ namespace Befunge.Interpreter
 			switch (_mode)
 			{
 				case InterpreterMode.Normal:
-					_ip.Direction = _stack.Pop() == 0
+					_ip.Direction = _stack.SafePop() == 0
 						? InstructionPointerDirection.Right
 						: InstructionPointerDirection.Left;
 					break;
@@ -370,7 +461,7 @@ namespace Befunge.Interpreter
 			switch (_mode)
 			{
 				case InterpreterMode.Normal:
-					_ip.Direction = _stack.Pop() == 0
+					_ip.Direction = _stack.SafePop() == 0
 						? InstructionPointerDirection.Down
 						: InstructionPointerDirection.Up;
 					break;
@@ -388,7 +479,21 @@ namespace Befunge.Interpreter
 
 		private void SagIf()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					ThrowHelper.ThrowNotImplementedInstructionException(Instruction.SagIf);
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.SagIf]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void Cmp()
@@ -396,8 +501,8 @@ namespace Befunge.Interpreter
 			switch (_mode)
 			{
 				case InterpreterMode.Normal:
-					long b = _stack.Pop(),
-			     	     a = _stack.Pop();
+					long b = _stack.SafePop(),
+			     	     a = _stack.SafePop();
 					if (a < b)
 						TurnLeft();
 					else if (a > b)
@@ -417,12 +522,40 @@ namespace Befunge.Interpreter
 
 		private void Jump()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					ThrowHelper.ThrowNotImplementedInstructionException(Instruction.Jump);
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.Jump]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void Iter()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					ThrowHelper.ThrowNotImplementedInstructionException(Instruction.Iter);
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.Iter]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void Add()
@@ -430,7 +563,7 @@ namespace Befunge.Interpreter
 			switch (_mode)
 			{
 				case InterpreterMode.Normal:
-					_stack.Push(_stack.Pop() + _stack.Pop());
+					_stack.Push(_stack.SafePop() + _stack.SafePop());
 					break;
 				case InterpreterMode.String:
 					_stack.Push(InstructionConverter.ToChar[Instruction.Add]);
@@ -448,7 +581,7 @@ namespace Befunge.Interpreter
 			switch (_mode)
 			{
 				case InterpreterMode.Normal:
-					_stack.Push(_stack.Pop() * _stack.Pop());
+					_stack.Push(_stack.SafePop() * _stack.SafePop());
 					break;
 				case InterpreterMode.String:
 					_stack.Push(InstructionConverter.ToChar[Instruction.Mul]);
@@ -469,7 +602,7 @@ namespace Befunge.Interpreter
 				case InterpreterMode.Normal:
 					// pay attention on minus
 					//           v
-					_stack.Push( - _stack.Pop() + _stack.Pop());
+					_stack.Push( - _stack.SafePop() + _stack.SafePop());
 					break;
 				case InterpreterMode.String:
 					_stack.Push(InstructionConverter.ToChar[Instruction.Sub]);
@@ -488,8 +621,8 @@ namespace Befunge.Interpreter
 			switch (_mode)
 			{
 				case InterpreterMode.Normal:
-					long b = _stack.Pop(),
-			     	     a = _stack.Pop();
+					long b = _stack.SafePop(),
+			     	     a = _stack.SafePop();
 					_stack.Push(a / b);
 					break;
 				case InterpreterMode.String:
@@ -509,8 +642,8 @@ namespace Befunge.Interpreter
 			switch (_mode)
 			{
 				case InterpreterMode.Normal:
-					long b = _stack.Pop(),
-			     	     a = _stack.Pop();
+					long b = _stack.SafePop(),
+			     	     a = _stack.SafePop();
 					_stack.Push(a % b);
 					break;
 				case InterpreterMode.String:
@@ -530,7 +663,7 @@ namespace Befunge.Interpreter
 			switch (_mode)
 			{
 				case InterpreterMode.Normal:
-					_stack.Push(_stack.Pop() < _stack.Pop() ? 1 : 0);
+					_stack.Push(_stack.SafePop() < _stack.SafePop() ? 1 : 0);
 					break;
 				case InterpreterMode.String:
 					_stack.Push(InstructionConverter.ToChar[Instruction.GreaterThan]);
@@ -549,7 +682,7 @@ namespace Befunge.Interpreter
 			switch (_mode)
 			{
 				case InterpreterMode.Normal:
-					_stack.Push(_stack.Pop() == 0 ? 1 : 0);
+					_stack.Push(_stack.SafePop() == 0 ? 1 : 0);
 					break;
 				case InterpreterMode.String:
 					_stack.Push(InstructionConverter.ToChar[Instruction.Not]);
@@ -563,314 +696,7 @@ namespace Befunge.Interpreter
 			_ip.Move();
 		}
 
-		// D0 to D15 were replaced with DN
-		/*
-		private void D0()
-		{
-			switch (_mode)
-			{
-				case InterpreterMode.Normal:
-					_stack.Push(0);
-					break;
-				case InterpreterMode.String:
-					_stack.Push(InstructionConverter.ToChar[Instruction.D0]);
-					break;
-				default:
-					ThrowHelper.ThrowInvalidEnumValueException(
-						nameof(_mode),
-						nameof(InstructionPointerDirection));
-					break;
-			}
-			_ip.Move();
-		}
-
-		private void D1()
-		{
-			switch (_mode)
-			{
-				case InterpreterMode.Normal:
-					_stack.Push(1);
-					break;
-				case InterpreterMode.String:
-					_stack.Push(InstructionConverter.ToChar[Instruction.D1]);
-					break;
-				default:
-					ThrowHelper.ThrowInvalidEnumValueException(
-						nameof(_mode),
-						nameof(InstructionPointerDirection));
-					break;
-			}
-			_ip.Move();
-		}
-
-		private void D2()
-		{
-			switch (_mode)
-			{
-				case InterpreterMode.Normal:
-					_stack.Push(2);
-					break;
-				case InterpreterMode.String:
-					_stack.Push(InstructionConverter.ToChar[Instruction.D2]);
-					break;
-				default:
-					ThrowHelper.ThrowInvalidEnumValueException(
-						nameof(_mode),
-						nameof(InstructionPointerDirection));
-					break;
-			}
-			_ip.Move();
-		}
-
-		private void D3()
-		{
-			switch (_mode)
-			{
-				case InterpreterMode.Normal:
-					_stack.Push(3);
-					break;
-				case InterpreterMode.String:
-					_stack.Push(InstructionConverter.ToChar[Instruction.D3]);
-					break;
-				default:
-					ThrowHelper.ThrowInvalidEnumValueException(
-						nameof(_mode),
-						nameof(InstructionPointerDirection));
-					break;
-			}
-			_ip.Move();
-		}
-
-		private void D4()
-		{
-			switch (_mode)
-			{
-				case InterpreterMode.Normal:
-					_stack.Push(4);
-					break;
-				case InterpreterMode.String:
-					_stack.Push(InstructionConverter.ToChar[Instruction.D4]);
-					break;
-				default:
-					ThrowHelper.ThrowInvalidEnumValueException(
-						nameof(_mode),
-						nameof(InstructionPointerDirection));
-					break;
-			}
-			_ip.Move();
-		}
-
-		private void D5()
-		{
-			switch (_mode)
-			{
-				case InterpreterMode.Normal:
-					_stack.Push(5);
-					break;
-				case InterpreterMode.String:
-					_stack.Push(InstructionConverter.ToChar[Instruction.D5]);
-					break;
-				default:
-					ThrowHelper.ThrowInvalidEnumValueException(
-						nameof(_mode),
-						nameof(InstructionPointerDirection));
-					break;
-			}
-			_ip.Move();
-		}
-
-		private void D6()
-		{
-			switch (_mode)
-			{
-				case InterpreterMode.Normal:
-					_stack.Push(6);
-					break;
-				case InterpreterMode.String:
-					_stack.Push(InstructionConverter.ToChar[Instruction.D6]);
-					break;
-				default:
-					ThrowHelper.ThrowInvalidEnumValueException(
-						nameof(_mode),
-						nameof(InstructionPointerDirection));
-					break;
-			}
-			_ip.Move();
-		}
-
-		private void D7()
-		{
-			switch (_mode)
-			{
-				case InterpreterMode.Normal:
-					_stack.Push(7);
-					break;
-				case InterpreterMode.String:
-					_stack.Push(InstructionConverter.ToChar[Instruction.D7]);
-					break;
-				default:
-					ThrowHelper.ThrowInvalidEnumValueException(
-						nameof(_mode),
-						nameof(InstructionPointerDirection));
-					break;
-			}
-			_ip.Move();
-		}
-
-		private void D8()
-		{
-			switch (_mode)
-			{
-				case InterpreterMode.Normal:
-					_stack.Push(8);
-					break;
-				case InterpreterMode.String:
-					_stack.Push(InstructionConverter.ToChar[Instruction.D8]);
-					break;
-				default:
-					ThrowHelper.ThrowInvalidEnumValueException(
-						nameof(_mode),
-						nameof(InstructionPointerDirection));
-					break;
-			}
-			_ip.Move();
-		}
-
-		private void D9()
-		{
-			switch (_mode)
-			{
-				case InterpreterMode.Normal:
-					_stack.Push(9);
-					break;
-				case InterpreterMode.String:
-					_stack.Push(InstructionConverter.ToChar[Instruction.D9]);
-					break;
-				default:
-					ThrowHelper.ThrowInvalidEnumValueException(
-						nameof(_mode),
-						nameof(InstructionPointerDirection));
-					break;
-			}
-			_ip.Move();
-		}
-
-		private void D10()
-		{
-			switch (_mode)
-			{
-				case InterpreterMode.Normal:
-					_stack.Push(10);
-					break;
-				case InterpreterMode.String:
-					_stack.Push(InstructionConverter.ToChar[Instruction.D10]);
-					break;
-				default:
-					ThrowHelper.ThrowInvalidEnumValueException(
-						nameof(_mode),
-						nameof(InstructionPointerDirection));
-					break;
-			}
-			_ip.Move();
-		}
-
-		private void D11()
-		{
-			switch (_mode)
-			{
-				case InterpreterMode.Normal:
-					_stack.Push(11);
-					break;
-				case InterpreterMode.String:
-					_stack.Push(InstructionConverter.ToChar[Instruction.D11]);
-					break;
-				default:
-					ThrowHelper.ThrowInvalidEnumValueException(
-						nameof(_mode),
-						nameof(InstructionPointerDirection));
-					break;
-			}
-			_ip.Move();
-		}
-
-		private void D12()
-		{
-			switch (_mode)
-			{
-				case InterpreterMode.Normal:
-					_stack.Push(12);
-					break;
-				case InterpreterMode.String:
-					_stack.Push(InstructionConverter.ToChar[Instruction.D12]);
-					break;
-				default:
-					ThrowHelper.ThrowInvalidEnumValueException(
-						nameof(_mode),
-						nameof(InstructionPointerDirection));
-					break;
-			}
-			_ip.Move();
-		}
-
-		private void D13()
-		{
-			switch (_mode)
-			{
-				case InterpreterMode.Normal:
-					_stack.Push(13);
-					break;
-				case InterpreterMode.String:
-					_stack.Push(InstructionConverter.ToChar[Instruction.D13]);
-					break;
-				default:
-					ThrowHelper.ThrowInvalidEnumValueException(
-						nameof(_mode),
-						nameof(InstructionPointerDirection));
-					break;
-			}
-			_ip.Move();
-		}
-
-		private void D14()
-		{
-			switch (_mode)
-			{
-				case InterpreterMode.Normal:
-					_stack.Push(14);
-					break;
-				case InterpreterMode.String:
-					_stack.Push(InstructionConverter.ToChar[Instruction.D14]);
-					break;
-				default:
-					ThrowHelper.ThrowInvalidEnumValueException(
-						nameof(_mode),
-						nameof(InstructionPointerDirection));
-					break;
-			}
-			_ip.Move();
-		}
-
-		private void D15()
-		{
-			switch (_mode)
-			{
-				case InterpreterMode.Normal:
-					_stack.Push(15);
-					break;
-				case InterpreterMode.String:
-					_stack.Push(InstructionConverter.ToChar[Instruction.D15]);
-					break;
-				default:
-					ThrowHelper.ThrowInvalidEnumValueException(
-						nameof(_mode),
-						nameof(InstructionPointerDirection));
-					break;
-			}
-			_ip.Move();
-		}
-		*/
-
-		private void DN(char n, Instruction instruction)
+		private void DN(int n, Instruction instruction)
 		{
 			switch (_mode)
 			{
@@ -878,7 +704,7 @@ namespace Befunge.Interpreter
 					_stack.Push(n);
 					break;
 				case InterpreterMode.String:
-					_stack.Push(InstructionConverter.ToChar[Instruction.D15]);
+					_stack.Push(InstructionConverter.ToChar[instruction]);
 					break;
 				default:
 					ThrowHelper.ThrowInvalidEnumValueException(
@@ -891,97 +717,394 @@ namespace Befunge.Interpreter
 
 		private void InInt()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					Console.WriteLine(_separatorLine);
+					Console.WriteLine("Waiting for input");
+					char c = Console.ReadKey(true).KeyChar;
+					if (c < '0' || c > '9')
+						throw new InvalidOperationException("Input must be a digit");
+					_stack.Push(c - '0');
+					_input += c;
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.InInt]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void InChar()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					Console.WriteLine(_separatorLine);
+					Console.WriteLine("Waiting for input");
+					char c = Console.ReadKey(true).KeyChar;
+					_stack.Push(c);
+					_input += c;
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.InChar]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void InFile()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					ThrowHelper.ThrowNotImplementedInstructionException(Instruction.InFile);
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.InFile]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void OutInt()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					_output += _stack.SafePop();
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.OutInt]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void OutChar()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					_output += (char)_stack.SafePop();
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.OutChar]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void OutFile()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					ThrowHelper.ThrowNotImplementedInstructionException(Instruction.OutFile);
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.OutFile]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void Pop()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					_stack.SafePop();
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.Pop]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void Dup()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					_stack.Push(_stack.Peek());
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.Dup]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void Swap()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					long b = _stack.SafePop(),
+					     a = _stack.SafePop();
+					_stack.Push(b);
+					_stack.Push(a);
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.Swap]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void Clear()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					_stack.Clear();
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.Clear]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void Get()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					long y = _stack.SafePop(),
+					     x = _stack.SafePop();
+					var cell = new InstructionPointer()
+					{
+						X = (int)x,
+						Y = (int)y
+					};
+					_stack.Push(_field[cell]);
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.Get]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void Put()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					long y = _stack.SafePop(),
+					     x = _stack.SafePop(),
+						 v = _stack.SafePop();
+					var cell = new InstructionPointer()
+					{
+						X = (int)x,
+						Y = (int)y
+					};
+					_field[cell] = v;
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.Put]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void Fetch()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					_ip.Move();
+					_stack.Push(_field[_ip]);
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.Fetch]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void Store()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					_ip.Move();
+					_field[_ip] = _stack.SafePop();
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.Store]);
+					_ip.Move();
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			// no move here
 		}
 
 		private void StackUnderStack()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					ThrowHelper.ThrowNotImplementedInstructionException(Instruction.StackUnderStack);
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.StackUnderStack]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void Begin()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					ThrowHelper.ThrowNotImplementedInstructionException(Instruction.Begin);
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.Begin]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void End()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					ThrowHelper.ThrowNotImplementedInstructionException(Instruction.End);
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.End]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void LoadSem()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					ThrowHelper.ThrowNotImplementedInstructionException(Instruction.LoadSem);
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.LoadSem]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void UnloadSem()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					ThrowHelper.ThrowNotImplementedInstructionException(Instruction.UnloadSem);
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.UnloadSem]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void Space()
@@ -1062,22 +1185,98 @@ namespace Befunge.Interpreter
 
 		private void Exec()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					ThrowHelper.ThrowNotImplementedInstructionException(Instruction.Exec);
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.Exec]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void Quit()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					ThrowHelper.ThrowNotImplementedInstructionException(Instruction.Quit);
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.Quit]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void Split()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					ThrowHelper.ThrowNotImplementedInstructionException(Instruction.Split);
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.Split]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 
 		private void GetSysInfo()
 		{
-			throw new NotImplementedException();
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					ThrowHelper.ThrowNotImplementedInstructionException(Instruction.GetSysInfo);
+					break;
+				case InterpreterMode.String:
+					_stack.Push(InstructionConverter.ToChar[Instruction.GetSysInfo]);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
+		}
+
+		// A to Z are reserved for fingerprints
+		private void Reserved(char n)
+		{
+			switch (_mode)
+			{
+				case InterpreterMode.Normal:
+					Reflect();
+					break;
+				case InterpreterMode.String:
+					_stack.Push(n);
+					break;
+				default:
+					ThrowHelper.ThrowInvalidEnumValueException(
+						nameof(_mode),
+						nameof(InstructionPointerDirection));
+					break;
+			}
+			_ip.Move();
 		}
 	}
 }
